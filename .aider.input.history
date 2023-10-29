@@ -1,0 +1,1045 @@
+
+# 2023-10-25 16:04:32.741812
++i need help fininshing this conversion of wowonder php to react
+
+# 2023-10-25 16:05:18.980007
++right now i got as far as login and seeing a feed with promoted post using wowonder apis
+
+# 2023-10-25 16:06:03.924415
++im making an instagram type app, so i guess the next funstion would be to load the feed with posts to view
+
+# 2023-10-25 16:07:14.244786
++/add src/Feed.js
+
+# 2023-10-25 16:07:37.908655
++/add src\components\Feed.js
+
+# 2023-10-25 16:08:06.597276
++import React, { useState, useEffect, useCallback } from "react";
++import { useNavigate } from "react-router-dom";
++import { makeApiRequest, endpoints } from "../api";
++import BottomNavbar from "../components/BottomNavbar";
++import PostPlaceholder from './PostPlaceholder'; // Import the PostPlaceholder component
++
++function linkify(inputText) {
++  const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
++  return inputText.replace(urlRegex, (url) => {
++    let hyperlink = url;
++    if (!url.match(/^http?:\/\//i)) {
++      hyperlink = "http://" + url;
++    }
++    return (
++      '<a href="' +
++      hyperlink +
++      '" target="_blank" rel="noopener noreferrer">' +
++      url +
++      "</a>"
++    );
++  });
++}
++
++function handleHashtags(inputText) {
++  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
++  return inputText.replace(hashtagRegex, (match, tag) => {
++    return `{{HASHTAG:${tag}}}`;
++  });
++}
++
++function replaceHashtagsWithLinks(inputText) {
++  const placeholderRegex = /{{HASHTAG:([a-zA-Z0-9_]+)}}/g;
++  return inputText.replace(placeholderRegex, (match, tag) => {
++    return `<a href="https://rougee.io/hashtag/${tag}">#${tag}</a>`;
++  });
++}
++
++function renderVideoContent(post) {
++  if (post.postYoutube) {
++    return (
++      <iframe
++        title="YouTube Video"
++        width="560"
++        height="315"
++        src={`https://www.youtube.com/embed/${post.postYoutube}`}
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  } else if (post.postVimeo) {
++    return (
++      <iframe
++        title="Vimeo Video"
++        src={`https://player.vimeo.com/video/${post.postVimeo}`}
++        width="560"
++        height="315"
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  }
++
++  if (
++    post.postFile_full &&
++    post.postFile_full.includes("https://rougee.io/upload/videos")
++  ) {
++    return (
++      <video width="560" height="315" controls>
++        <source src={post.postFile_full} type="video/mp4" />
++        Your browser does not support the video tag.
++      </video>
++    );
++  }
++
++  if (post.postLinkImage) {
++    return <img src={post.postLinkImage} alt="Post Link" />;
++  }
++
++  return null;
++}
++
++function Feed(props) {
++  
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++  const [promotedPost, setPromotedPost] = useState(null);
++  const [refreshCounter, setRefreshCounter] = useState(0); // Add this line
++
++  const navigate = useNavigate();
++  const [isExpanded, setIsExpanded] = useState(false);
++  
++  const refreshFeed = useCallback(() => { // Add this function
++    setRefreshCounter((prevCount) => prevCount + 1);
++  }, []);
++
++  useEffect(() => {
++    // Define fetchFeedData inside the useEffect
++    const fetchFeedData = () => {
++      setLoading(true);
++  
++      makeApiRequest(endpoints.promotedPost, {}, () => {
++        navigate("/loginpage");
++      })
++        .then((data) => {
++          if (data.api_status === 200) {
++            setPromotedPost(data.data);
++            setLoading(false);
++          } else {
++            setError("Error fetching promoted post.");
++            setLoading(false);
++          }
++        })
++        .catch((error) => {
++          console.error("Error fetching promoted post:", error);
++          setError("Network or server error.");
++          setLoading(false);
++        });
++    };
++  
++    fetchFeedData(); // Call fetchFeedData here
++  
++    // Add navigate to the dependency array
++  }, [navigate, refreshCounter]); // Add refreshCounter to dependency array
++
++  if (loading) {
++    return (
++      <div>
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        {/* Render as many PostPlaceholders as you want */}
++      </div>
++    );
++  }
++
++  if (error) {
++    return <div>Error: {error}</div>;
++  }
++
++  let postElement = null;
++
++  if (promotedPost) {
++    const processedText = replaceHashtagsWithLinks(
++      linkify(
++        handleHashtags(
++          isExpanded
++            ? promotedPost.postText
++            : `${promotedPost.postText.substring(0, 100)}...`
++        )
++      )
++    );
++    const finalText = processedText.replace(/PLACEHOLDER/g, 'https://');
++
++    postElement = (
++      <div className="post-box">
++        <div className="post-header">
++          <img className="avatar" src={promotedPost.publisher.avatar} alt="User Avatar" />
++          <h3>{promotedPost.publisher.username}</h3>
++        </div>
++        <div className="post-content">
++          <h2>Promoted Post</h2>
++          <p dangerouslySetInnerHTML={{ __html: finalText }}></p>
++          <span onClick={() => setIsExpanded(!isExpanded)} style={{ color: "blue", cursor: "pointer" }}>
++            {isExpanded ? " See Less" : " See More"}
++          </span>
++          {renderVideoContent(promotedPost) || (
++            <img src={promotedPost.postFile_full} alt="Promoted" />
++          )}
++        </div>
++      </div>
++    );
++  }
++
++  return (
++    <div>
++      <div className="feed-container">
++        {postElement}
++      </div>
++      <BottomNavbar onHomeClick={refreshFeed} /> {/* Pass the refreshFeed function as a prop */}
++    </div>
++  );
++}
++
++export default Feed;
++
+
+# 2023-10-25 16:13:04.652400
++https://rougee.io/api/posts?access_token=ba1f6ac55b4133c0a3d1e891ca1482b8028d7100464e7fbfe7ab88c426070d32bafa6a022873427851fda174c360f4ea5d21de87c4c9a792   thats an exmaple of the end point and here is the response       {
++    "api_status": 200,
++    "data": {
++        "id": "239231",
++        "post_id": "239231",
++        "user_id": "0",
++        "recipient_id": "0",
++        "postText": "",
++        "page_id": "96",
++        "group_id": "0",
++        "event_id": "0",
++        "page_event_id": "0",
++        "postLink": "",
++        "postLinkTitle": "",
++        "postLinkImage": "",
++        "postLinkContent": "",
++        "postVimeo": "",
++        "postDailymotion": "",
++        "postFacebook": "",
++        "postFile": "https://rougee.io/upload/photos/2023/10/casH4OFJ4wHDpPOHe96G_21_955b84ba1a2d8499e58939189a06468e_image.jpeg",
++        "postFileName": "IMG_0792.jpeg",
++        "postFileThumb": "",
++        "postYoutube": "",
++        "postVine": "",
++        "postSoundCloud": "",
++        "postPlaytube": "",
++        "postDeepsound": "",
++        "postMap": "",
++        "postShare": "0",
++        "postPrivacy": "0",
++        "postType": "post",
++        "postFeeling": "",
++        "postListening": "",
++        "postTraveling": "",
++        "postWatching": "",
++        "postPlaying": "",
++        "postPhoto": "",
++        "time": "1697866965",
++        "registered": "10/2023",
++        "album_name": "",
++        "multi_image": "0",
++        "multi_image_post": "0",
++        "boosted": "1",
++        "product_id": "0",
++        "poll_id": "0",
++        "blog_id": "0",
++        "forum_id": "0",
++        "thread_id": "0",
++        "videoViews": "0",
++        "postRecord": "",
++        "postSticker": null,
++        "shared_from": false,
++        "post_url": null,
++        "parent_id": "0",
++        "cache": "0",
++        "comments_status": "1",
++        "blur": "0",
++        "color_id": "0",
++        "job_id": "0",
++        "offer_id": "0",
++        "fund_raise_id": "0",
++        "fund_id": "0",
++        "active": "1",
++        "stream_name": "",
++        "agora_token": null,
++        "live_time": "0",
++        "live_ended": "0",
++        "agora_resource_id": null,
++        "agora_sid": "",
++        "send_notify": "",
++        "240p": "0",
++        "360p": "0",
++        "480p": "0",
++        "720p": "0",
++        "1080p": "0",
++        "2048p": "0",
++        "4096p": "0",
++        "processing": "0",
++        "ai_post": "0",
++        "vy-live": "no",
++        "publisher": {
++            "page_id": "96",
++            "user_id": "2",
++            "page_name": "Baddiez",
++            "page_title": "Baddiez",
++            "page_description": "Baddies 18+",
++            "avatar": "https://rougee.io/upload/photos/2023/08/QUdUNs9gFx79B7QLCMNI_11_920bcaf631d8b06b4ac592abea9632f9_avatar.gif",
++            "cover": "https://rougee.io/upload/photos/d-cover.jpg",
++            "users_post": "0",
++            "page_category": "10",
++            "sub_category": "",
++            "website": "",
++            "facebook": "",
++            "google": "",
++            "vk": "",
++            "twitter": "",
++            "linkedin": "",
++            "company": "",
++            "phone": "",
++            "address": "",
++            "call_action_type": "1",
++            "call_action_type_url": "",
++            "background_image": "",
++            "instgram": "",
++            "youtube": "",
++            "verified": "1",
++            "active": "1",
++            "registered": "4/2023",
++            "boosted": "1",
++            "time": "1680715742",
++            "about": "Baddies 18+",
++            "url": "https://rougee.io/Baddiez",
++            "name": "Baddiez",
++            "rating": 0,
++            "category": "Lifestyle",
++            "page_sub_category": "",
++            "is_reported": false,
++            "is_verified": 1,
++            "is_page_onwer": false,
++            "username": "Baddiez",
++            "fields": [],
++            "banned": 0
++        },
++        "page_info": [],
++        "limit_comments": 3,
++        "limited_comments": false,
++        "is_group_post": false,
++        "group_recipient_exists": false,
++        "group_admin": false,
++        "post_is_promoted": 0,
++        "postText_API": "",
++        "Orginaltext": "",
++        "post_time": "5 d",
++        "page": 0,
++        "url": "https://rougee.io/post/239231_.html",
++        "seo_id": "239231_.html",
++        "via_type": "",
++        "recipient_exists": false,
++        "recipient": "",
++        "admin": false,
++        "post_share": "0",
++        "is_post_saved": false,
++        "is_post_reported": false,
++        "is_post_boosted": 1,
++        "is_liked": false,
++        "is_wondered": false,
++        "post_comments": "0",
++        "post_shares": "0",
++        "post_likes": "0",
++        "post_wonders": "0",
++        "is_post_pinned": false,
++        "get_post_comments": [],
++        "photo_album": [],
++        "options": [],
++        "voted_id": 0,
++        "postFile_full": "https://rougee.io/upload/photos/2023/10/casH4OFJ4wHDpPOHe96G_21_955b84ba1a2d8499e58939189a06468e_image.jpeg",
++        "reaction": {
++            "1": 1,
++            "2": 1,
++            "is_reacted": false,
++            "type": "",
++            "count": 2
++        },
++        "job": [],
++        "offer": [],
++        "fund": [],
++        "fund_data": [],
++        "forum": [],
++        "thread": [],
++        "is_still_live": false,
++        "live_sub_users": 0,
++        "have_next_image": true,
++        "have_pre_image": true,
++        "shared_info": null,
++        "user_data": null
++    }
++}
+
+# 2023-10-25 16:14:51.236194
++show me the whole code    import React, { useState, useEffect, useCallback } from "react";
++import { useNavigate } from "react-router-dom";
++import { makeApiRequest, endpoints } from "../api";
++import BottomNavbar from "../components/BottomNavbar";
++import PostPlaceholder from './PostPlaceholder'; // Import the PostPlaceholder component
++
++function linkify(inputText) {
++  const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
++  return inputText.replace(urlRegex, (url) => {
++    let hyperlink = url;
++    if (!url.match(/^http?:\/\//i)) {
++      hyperlink = "http://" + url;
++    }
++    return (
++      '<a href="' +
++      hyperlink +
++      '" target="_blank" rel="noopener noreferrer">' +
++      url +
++      "</a>"
++    );
++  });
++}
++
++function handleHashtags(inputText) {
++  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
++  return inputText.replace(hashtagRegex, (match, tag) => {
++    return `{{HASHTAG:${tag}}}`;
++  });
++}
++
++function replaceHashtagsWithLinks(inputText) {
++  const placeholderRegex = /{{HASHTAG:([a-zA-Z0-9_]+)}}/g;
++  return inputText.replace(placeholderRegex, (match, tag) => {
++    return `<a href="https://rougee.io/hashtag/${tag}">#${tag}</a>`;
++  });
++}
++
++function renderVideoContent(post) {
++  if (post.postYoutube) {
++    return (
++      <iframe
++        title="YouTube Video"
++        width="560"
++        height="315"
++        src={`https://www.youtube.com/embed/${post.postYoutube}`}
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  } else if (post.postVimeo) {
++    return (
++      <iframe
++        title="Vimeo Video"
++        src={`https://player.vimeo.com/video/${post.postVimeo}`}
++        width="560"
++        height="315"
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  }
++
++  if (
++    post.postFile_full &&
++    post.postFile_full.includes("https://rougee.io/upload/videos")
++  ) {
++    return (
++      <video width="560" height="315" controls>
++        <source src={post.postFile_full} type="video/mp4" />
++        Your browser does not support the video tag.
++      </video>
++    );
++  }
++
++  if (post.postLinkImage) {
++    return <img src={post.postLinkImage} alt="Post Link" />;
++  }
++
++  return null;
++}
++
++function Feed(props) {
++  
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++  const [promotedPost, setPromotedPost] = useState(null);
++  const [refreshCounter, setRefreshCounter] = useState(0); // Add this line
++
++  const navigate = useNavigate();
++  const [isExpanded, setIsExpanded] = useState(false);
++  
++  const refreshFeed = useCallback(() => { // Add this function
++    setRefreshCounter((prevCount) => prevCount + 1);
++  }, []);
++
++  useEffect(() => {
++    // Define fetchFeedData inside the useEffect
++    const fetchFeedData = () => {
++      setLoading(true);
++  
++      makeApiRequest(endpoints.promotedPost, {}, () => {
++        navigate("/loginpage");
++      })
++        .then((data) => {
++          if (data.api_status === 200) {
++            setPromotedPost(data.data);
++            setLoading(false);
++          } else {
++            setError("Error fetching promoted post.");
++            setLoading(false);
++          }
++        })
++        .catch((error) => {
++          console.error("Error fetching promoted post:", error);
++          setError("Network or server error.");
++          setLoading(false);
++        });
++    };
++  
++    fetchFeedData(); // Call fetchFeedData here
++  
++    // Add navigate to the dependency array
++  }, [navigate, refreshCounter]); // Add refreshCounter to dependency array
++
++  if (loading) {
++    return (
++      <div>
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        {/* Render as many PostPlaceholders as you want */}
++      </div>
++    );
++  }
++
++  if (error) {
++    return <div>Error: {error}</div>;
++  }
++
++  let postElement = null;
++
++  if (promotedPost) {
++    const processedText = replaceHashtagsWithLinks(
++      linkify(
++        handleHashtags(
++          isExpanded
++            ? promotedPost.postText
++            : `${promotedPost.postText.substring(0, 100)}...`
++        )
++      )
++    );
++    const finalText = processedText.replace(/PLACEHOLDER/g, 'https://');
++
++    postElement = (
++      <div className="post-box">
++        <div className="post-header">
++          <img className="avatar" src={promotedPost.publisher.avatar} alt="User Avatar" />
++          <h3>{promotedPost.publisher.username}</h3>
++        </div>
++        <div className="post-content">
++          <h2>Promoted Post</h2>
++          <p dangerouslySetInnerHTML={{ __html: finalText }}></p>
++          <span onClick={() => setIsExpanded(!isExpanded)} style={{ color: "blue", cursor: "pointer" }}>
++            {isExpanded ? " See Less" : " See More"}
++          </span>
++          {renderVideoContent(promotedPost) || (
++            <img src={promotedPost.postFile_full} alt="Promoted" />
++          )}
++        </div>
++      </div>
++    );
++  }
++
++  return (
++    <div>
++      <div className="feed-container">
++        {postElement}
++      </div>
++      <BottomNavbar onHomeClick={refreshFeed} /> {/* Pass the refreshFeed function as a prop */}
++    </div>
++  );
++}
++
++export default Feed;
++
+
+# 2023-10-25 16:15:06.380542
++/clear
+
+# 2023-10-25 16:15:12.148053
++show me the whole code   import React, { useState, useEffect, useCallback } from "react";
++import { useNavigate } from "react-router-dom";
++import { makeApiRequest, endpoints } from "../api";
++import BottomNavbar from "../components/BottomNavbar";
++import PostPlaceholder from './PostPlaceholder'; // Import the PostPlaceholder component
++
++function linkify(inputText) {
++  const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
++  return inputText.replace(urlRegex, (url) => {
++    let hyperlink = url;
++    if (!url.match(/^http?:\/\//i)) {
++      hyperlink = "http://" + url;
++    }
++    return (
++      '<a href="' +
++      hyperlink +
++      '" target="_blank" rel="noopener noreferrer">' +
++      url +
++      "</a>"
++    );
++  });
++}
++
++function handleHashtags(inputText) {
++  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
++  return inputText.replace(hashtagRegex, (match, tag) => {
++    return `{{HASHTAG:${tag}}}`;
++  });
++}
++
++function replaceHashtagsWithLinks(inputText) {
++  const placeholderRegex = /{{HASHTAG:([a-zA-Z0-9_]+)}}/g;
++  return inputText.replace(placeholderRegex, (match, tag) => {
++    return `<a href="https://rougee.io/hashtag/${tag}">#${tag}</a>`;
++  });
++}
++
++function renderVideoContent(post) {
++  if (post.postYoutube) {
++    return (
++      <iframe
++        title="YouTube Video"
++        width="560"
++        height="315"
++        src={`https://www.youtube.com/embed/${post.postYoutube}`}
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  } else if (post.postVimeo) {
++    return (
++      <iframe
++        title="Vimeo Video"
++        src={`https://player.vimeo.com/video/${post.postVimeo}`}
++        width="560"
++        height="315"
++        frameBorder="0"
++        allowFullScreen
++      ></iframe>
++    );
++  }
++
++  if (
++    post.postFile_full &&
++    post.postFile_full.includes("https://rougee.io/upload/videos")
++  ) {
++    return (
++      <video width="560" height="315" controls>
++        <source src={post.postFile_full} type="video/mp4" />
++        Your browser does not support the video tag.
++      </video>
++    );
++  }
++
++  if (post.postLinkImage) {
++    return <img src={post.postLinkImage} alt="Post Link" />;
++  }
++
++  return null;
++}
++
++function Feed(props) {
++  
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++  const [promotedPost, setPromotedPost] = useState(null);
++  const [refreshCounter, setRefreshCounter] = useState(0); // Add this line
++
++  const navigate = useNavigate();
++  const [isExpanded, setIsExpanded] = useState(false);
++  
++  const refreshFeed = useCallback(() => { // Add this function
++    setRefreshCounter((prevCount) => prevCount + 1);
++  }, []);
++
++  useEffect(() => {
++    // Define fetchFeedData inside the useEffect
++    const fetchFeedData = () => {
++      setLoading(true);
++  
++      makeApiRequest(endpoints.promotedPost, {}, () => {
++        navigate("/loginpage");
++      })
++        .then((data) => {
++          if (data.api_status === 200) {
++            setPromotedPost(data.data);
++            setLoading(false);
++          } else {
++            setError("Error fetching promoted post.");
++            setLoading(false);
++          }
++        })
++        .catch((error) => {
++          console.error("Error fetching promoted post:", error);
++          setError("Network or server error.");
++          setLoading(false);
++        });
++    };
++  
++    fetchFeedData(); // Call fetchFeedData here
++  
++    // Add navigate to the dependency array
++  }, [navigate, refreshCounter]); // Add refreshCounter to dependency array
++
++  if (loading) {
++    return (
++      <div>
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        <PostPlaceholder />
++        {/* Render as many PostPlaceholders as you want */}
++      </div>
++    );
++  }
++
++  if (error) {
++    return <div>Error: {error}</div>;
++  }
++
++  let postElement = null;
++
++  if (promotedPost) {
++    const processedText = replaceHashtagsWithLinks(
++      linkify(
++        handleHashtags(
++          isExpanded
++            ? promotedPost.postText
++            : `${promotedPost.postText.substring(0, 100)}...`
++        )
++      )
++    );
++    const finalText = processedText.replace(/PLACEHOLDER/g, 'https://');
++
++    postElement = (
++      <div className="post-box">
++        <div className="post-header">
++          <img className="avatar" src={promotedPost.publisher.avatar} alt="User Avatar" />
++          <h3>{promotedPost.publisher.username}</h3>
++        </div>
++        <div className="post-content">
++          <h2>Promoted Post</h2>
++          <p dangerouslySetInnerHTML={{ __html: finalText }}></p>
++          <span onClick={() => setIsExpanded(!isExpanded)} style={{ color: "blue", cursor: "pointer" }}>
++            {isExpanded ? " See Less" : " See More"}
++          </span>
++          {renderVideoContent(promotedPost) || (
++            <img src={promotedPost.postFile_full} alt="Promoted" />
++          )}
++        </div>
++      </div>
++    );
++  }
++
++  return (
++    <div>
++      <div className="feed-container">
++        {postElement}
++      </div>
++      <BottomNavbar onHomeClick={refreshFeed} /> {/* Pass the refreshFeed function as a prop */}
++    </div>
++  );
++}
++
++export default Feed;
++
+
+# 2023-10-25 16:23:32.772566
++ok the only thing is its not loading at least 10 posts, maybe limit 10?
+
+# 2023-10-25 16:23:51.187785
++i dont see that part either
+
+# 2023-10-25 16:26:29.644191
++src\components\Feed.js
++  Line 103:11:  'setPosts' is not defined  no-undef
+
+# 2023-10-25 16:28:07.204057
++
++https://rougee.io/api/undefined?access_token=78c507150549ce2369754637b4d16322bb364e42e7ba5f2a2c00e9dae9203a34966e3812319365804f20f7f5d2e7a1b640ebc8244428558c
++Request Method:
++POST
++Status Code:
++200 OK      api_status: "404", errors: {error_id: "1", error_text: "Error: 404 API Type Not Found"}}
++api_status
++: 
++"404"
++errors
++: 
++{error_id: "1", error_text: "Error: 404 API Type Not Found"}
+
+# 2023-10-25 16:29:19.699851
++Module build failed (from ./node_modules/babel-loader/lib/index.js):
++SyntaxError: C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\src\api.js: Identifier 'endpoints' has already been declared. (89:6)
++
++  87 |
++  88 | export { makeApiRequest, endpoints, rougeeApiBaseUrl, getPostData };  // Exporting the base URL as well
++> 89 | const endpoints = {
++     |       ^
++  90 |   posts: '/api/posts', // replace '/api/posts' with your actual endpoint
++  91 | };
++  92 |
+
+# 2023-10-25 16:30:50.459109
++ERROR in ./src/api.js
++Module build failed (from ./node_modules/babel-loader/lib/index.js):
++SyntaxError: C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\src\api.js: Identifier 'endpoints' has already been declared. (89:6)
++
++  87 |
++  88 | export { makeApiRequest, endpoints, rougeeApiBaseUrl, getPostData };  // Exporting the base URL as well
++> 89 | const endpoints = {
++     |       ^
++  90 |   posts: '/api/posts', // replace '/api/posts' with your actual endpoint
++  91 | };
++  92 |
++    at constructor (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:348:19)
++    at FlowParserMixin.raise (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:3202:19)
++    at FlowScopeHandler.checkRedeclarationInScope (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:1475:19)
++    at FlowScopeHandler.declareName (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:1446:12)
++    at FlowScopeHandler.declareName (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:1542:11)
++    at FlowParserMixin.declareNameFromIdentifier (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:7455:16)
++    at FlowParserMixin.checkIdentifier (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:7451:12)
++    at FlowParserMixin.checkLVal (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:7390:12)
++    at FlowParserMixin.parseVarId (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:13225:10)
++    at FlowParserMixin.parseVarId (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:5660:11)
++    at FlowParserMixin.parseVar (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:13203:12)
++    at FlowParserMixin.parseVarStatement (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:13045:10)
++    at FlowParserMixin.parseStatementContent (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:12628:23)
++    at FlowParserMixin.parseStatementLike (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:12533:17)
++    at FlowParserMixin.parseStatementLike (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:5072:24)
++    at FlowParserMixin.parseModuleItem (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:12510:17)
++    at FlowParserMixin.parseBlockOrModuleBlockBody (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:13134:36)
++    at FlowParserMixin.parseBlockBody (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:13127:10)
++    at FlowParserMixin.parseProgram (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:12409:10)
++    at FlowParserMixin.parseTopLevel (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:12399:25)
++    at FlowParserMixin.parseTopLevel (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:5877:28)
++    at FlowParserMixin.parse (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:14295:10)
++    at parse (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\parser\lib\index.js:14336:38)
++    at parser (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\core\lib\parser\index.js:41:34)
++    at parser.next (<anonymous>)
++    at normalizeFile (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
++    at normalizeFile.next (<anonymous>)
++    at run (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\core\lib\transformation\index.js:21:50)
++    at run.next (<anonymous>)
++    at transform (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\@babel\core\lib\transform.js:22:33)
++    at transform.next (<anonymous>)
++    at step (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\gensync\index.js:261:32)
++    at C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\gensync\index.js:273:13
++    at async.call.result.err.err (C:\Users\brand\Documents\GitHub\rougee-react\rougee-account-creator\node_modules\gensync\index.js:223:11)
++ERROR
++[eslint] 
++src\api.js
++  Line 89:6:  Parsing error: Identifier 'endpoints' has already been declared. (89:6)
+
+# 2023-10-25 16:32:41.275085
++revert my api file back to the original
+
+# 2023-10-25 16:35:18.827375
++revert my feed back to original also
+
+# 2023-10-25 18:07:57.618200
++revert feed back to this  +import React, { useState, useEffect, useCallback } from "react";
+++import { useNavigate } from "react-router-dom";
+++import { makeApiRequest, endpoints } from "../api";
+++import BottomNavbar from "../components/BottomNavbar";
+++import PostPlaceholder from './PostPlaceholder'; // Import the PostPlaceholder component
+++
+++function linkify(inputText) {
+++  const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
+++  return inputText.replace(urlRegex, (url) => {
+++    let hyperlink = url;
+++    if (!url.match(/^http?:\/\//i)) {
+++      hyperlink = "http://" + url;
+++    }
+++    return (
+++      '<a href="' +
+++      hyperlink +
+++      '" target="_blank" rel="noopener noreferrer">' +
+++      url +
+++      "</a>"
+++    );
+++  });
+++}
+++
+++function handleHashtags(inputText) {
+++  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
+++  return inputText.replace(hashtagRegex, (match, tag) => {
+++    return `{{HASHTAG:${tag}}}`;
+++  });
+++}
+++
+++function replaceHashtagsWithLinks(inputText) {
+++  const placeholderRegex = /{{HASHTAG:([a-zA-Z0-9_]+)}}/g;
+++  return inputText.replace(placeholderRegex, (match, tag) => {
+++    return `<a href="https://rougee.io/hashtag/${tag}">#${tag}</a>`;
+++  });
+++}
+++
+++function renderVideoContent(post) {
+++  if (post.postYoutube) {
+++    return (
+++      <iframe
+++        title="YouTube Video"
+++        width="560"
+++        height="315"
+++        src={`https://www.youtube.com/embed/${post.postYoutube}`}
+++        frameBorder="0"
+++        allowFullScreen
+++      ></iframe>
+++    );
+++  } else if (post.postVimeo) {
+++    return (
+++      <iframe
+++        title="Vimeo Video"
+++        src={`https://player.vimeo.com/video/${post.postVimeo}`}
+++        width="560"
+++        height="315"
+++        frameBorder="0"
+++        allowFullScreen
+++      ></iframe>
+++    );
+++  }
+++
+++  if (
+++    post.postFile_full &&
+++    post.postFile_full.includes("https://rougee.io/upload/videos")
+++  ) {
+++    return (
+++      <video width="560" height="315" controls>
+++        <source src={post.postFile_full} type="video/mp4" />
+++        Your browser does not support the video tag.
+++      </video>
+++    );
+++  }
+++
+++  if (post.postLinkImage) {
+++    return <img src={post.postLinkImage} alt="Post Link" />;
+++  }
+++
+++  return null;
+++}
+++
+++function Feed(props) {
+++  
+++  const [loading, setLoading] = useState(true);
+++  const [error, setError] = useState(null);
+++  const [promotedPost, setPromotedPost] = useState(null);
+++  const [refreshCounter, setRefreshCounter] = useState(0); // Add this line
+++
+++  const navigate = useNavigate();
+++  const [isExpanded, setIsExpanded] = useState(false);
+++  
+++  const refreshFeed = useCallback(() => { // Add this function
+++    setRefreshCounter((prevCount) => prevCount + 1);
+++  }, []);
+++
+++  useEffect(() => {
+++    // Define fetchFeedData inside the useEffect
+++    const fetchFeedData = () => {
+++      setLoading(true);
+++  
+++      makeApiRequest(endpoints.promotedPost, {}, () => {
+++        navigate("/loginpage");
+++      })
+++        .then((data) => {
+++          if (data.api_status === 200) {
+++            setPromotedPost(data.data);
+++            setLoading(false);
+++          } else {
+++            setError("Error fetching promoted post.");
+++            setLoading(false);
+++          }
+++        })
+++        .catch((error) => {
+++          console.error("Error fetching promoted post:", error);
+++          setError("Network or server error.");
+++          setLoading(false);
+++        });
+++    };
+++  
+++    fetchFeedData(); // Call fetchFeedData here
+++  
+++    // Add navigate to the dependency array
+++  }, [navigate, refreshCounter]); // Add refreshCounter to dependency array
+++
+++  if (loading) {
+++    return (
+++      <div>
+++        <PostPlaceholder />
+++        <PostPlaceholder />
+++        <PostPlaceholder />
+++        <PostPlaceholder />
+++        <PostPlaceholder />
+++        {/* Render as many PostPlaceholders as you want */}
+++      </div>
+++    );
+++  }
+++
+++  if (error) {
+++    return <div>Error: {error}</div>;
+++  }
+++
+++  let postElement = null;
+++
+++  if (promotedPost) {
+++    const processedText = replaceHashtagsWithLinks(
+++      linkify(
+++        handleHashtags(
+++          isExpanded
+++            ? promotedPost.postText
+++            : `${promotedPost.postText.substring(0, 100)}...`
+++        )
+++      )
+++    );
+++    const finalText = processedText.replace(/PLACEHOLDER/g, 'https://');
+++
+++    postElement = (
+++      <div className="post-box">
+++        <div className="post-header">
+++          <img className="avatar" src={promotedPost.publisher.avatar} alt="User Avatar" />
+++          <h3>{promotedPost.publisher.username}</h3>
+++        </div>
+++        <div className="post-content">
+++          <h2>Promoted Post</h2>
+++          <p dangerouslySetInnerHTML={{ __html: finalText }}></p>
+++          <span onClick={() => setIsExpanded(!isExpanded)} style={{ color: "blue", cursor: "pointer" }}>
+++            {isExpanded ? " See Less" : " See More"}
+++          </span>
+++          {renderVideoContent(promotedPost) || (
+++            <img src={promotedPost.postFile_full} alt="Promoted" />
+++          )}
+++        </div>
+++      </div>
+++    );
+++  }
+++
+++  return (
+++    <div>
+++      <div className="feed-container">
+++        {postElement}
+++      </div>
+++      <BottomNavbar onHomeClick={refreshFeed} /> {/* Pass the refreshFeed function as a prop */}
+++    </div>
+++  );
+++}
+++
+++export default Feed;

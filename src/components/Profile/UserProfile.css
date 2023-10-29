@@ -1,0 +1,24 @@
+/* Basic styling to visualize the layout */
+.user-profile {
+    width: 100%;
+    max-width: 600px; /* Adjust based on preference */
+    margin: 0 auto;
+    padding: 0px;
+  }
+  
+  .cover-photo {
+    width: 100%;
+    height: 200px; /* Adjust based on preference */
+    background-color: lightgray; /* Placeholder color */
+  }
+  
+  .avatar_p {
+    width: 100px;
+    height: 100px;
+    margin: -50px auto 0; /* Centered and overlapping the cover photo */
+    background-color: gray; /* Placeholder color */
+    border-radius: 50%; /* Circle shape */
+  }
+  
+  /* ... Continue with other styles ... */
+  

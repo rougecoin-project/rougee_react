@@ -1,0 +1,28 @@
+.hamburger-menu {
+    position: fixed; /* or 'absolute', depending on your layout */
+    top: 0;
+    left: 0;
+    padding: 10px; /* Adjust as needed */
+    z-index: 1000; /* Ensures the menu is on top of other elements */
+  }
+  
+  .hamburger-icon {
+    cursor: pointer;
+    font-size: 24px;
+  }
+  
+  .menu-options {
+    display: none; /* Initially hidden */
+    position: absolute;
+    top: 100%; /* Positioned below the hamburger icon */
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    width: 200px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); /* Optional: for a dropdown shadow */
+  }
+  
+  .hamburger-menu.open .menu-options {
+    display: block; /* Shown when the menu is open */
+  }
+  

@@ -1,0 +1,422 @@
+/* Default theme (Dark - which you already have) */
+.App.dark {
+  --primary-bg-color: #080216;
+  --secondary-bg-color: #04080e;
+  --primary-text-color: #e6e6e6;
+  --secondary-text-color: #64ffda;
+  --link-color: #61dafb;
+  /* ... add other variables as needed */
+}
+
+/* Light theme with iridescent gradients */
+.App.light {
+  --primary-bg-color: rgba(255, 255, 255, 0.5);
+  --secondary-bg-color: linear-gradient(to right, #e6e9f0, #eef1f5, #f2f3f8, #f5f5fb, #f8f8fe);
+  --primary-text-color: black;
+  --secondary-text-color: #333;
+  --link-color: #007BFF;
+  /* ... add other variables as needed */
+}
+
+/* Terminal theme (Fallout 4 style) */
+.App.terminal {
+  --primary-bg-color: #000000;
+  --secondary-bg-color: #080808;
+  --primary-text-color: #00ff00;
+  --secondary-text-color: #00aa00;
+  --link-color: #00cc00;
+  /* ... add other variables as needed */
+}
+
+/* Reset default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars on all elements */
+body::-webkit-scrollbar {
+  width: 0; /* Set the width to zero to hide the scrollbar */
+}
+
+/* Optionally, you can also hide scrollbar buttons (arrows) */
+body::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Track */
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Handle */
+body::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  outline: 1px solid transparent;
+}
+
+/* Enable scrolling on hover or focus */
+body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2); /* Change the color on hover */
+}
+
+/* Global styles */
+.App {
+  text-align: center;
+  background-color: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px #64ffda); /* Neon glow effect */
+}
+
+.logo {
+  width: 125px; /* Adjust based on your logo's dimensions */
+  margin: 5px 0; /* Add some space around the logo */
+  position: relative;
+}
+
+.left {
+  float: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+/* Header styles */
+.App-header {
+  background-color: var(--secondary-bg-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: #64ffda; /* Neon color for header text */
+}
+
+/* Links styles */
+.App-link {
+  color: var(--link-color);
+}
+
+/* Logo spin animation */
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cyberpunk-style button */
+button {
+  background-color: #5f0d3a; /* Neon color for button background */
+  color: #ffffff; /* Dark color for button text */
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 9px;
+  margin: 10px 0;
+  width: 89%;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s, transform 0.2s;
+}
+
+button:hover {
+  background-color: #0a192f; /* Dark background on hover */
+  color: #64ffda; /* Neon color on hover */
+  transform: scale(1.1); /* Scale up slightly on hover */
+}
+
+/* Header text pulse animation */
+.App-header h1 {
+  animation: neonPulse 1s infinite alternate; /* Neon pulse animation */
+}
+
+@keyframes neonPulse {
+  0% {
+    color: #64ffda; /* Neon color */
+  }
+  100% {
+    color: #0a192f; /* Dark color */
+  }
+}
+
+/* Feed styles */
+.feed-container {
+  font-size: 15px;
+  padding: 0.5rem;
+  max-width: 100%;
+}
+
+/* Post styles */
+.post-box {
+  background-color: var(--secondary-bg-color); /* Slightly darker shade */
+  padding: 1.5rem;
+  padding-bottom: 50px;
+  border: none; /* Remove the border */
+  border-radius: 15px; /* Increase border-radius */
+  margin-bottom: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* More prominent shadow */
+  font-family: 'Futura', sans-serif; /* Example font; replace with your choice */
+  transition: transform 0.2s, box-shadow 0.2s; /* Smooth transition for hover effect */
+  max-height: 108vh;
+  overflow: auto;  /* Initially hide the overflowing text */
+  position: relative; /* Relative positioning for the "See More" button */
+}
+
+.post-meta-data {
+  font-size: 12px;
+  color: #911750;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.see-more {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+}
+
+.post-box:hover {
+  transform: translateY(-5px); /* Lift the post box slightly on hover */
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.15); /* Increase shadow on hover */
+}
+
+/* Post header styles */
+.post-header {
+  flex-direction: row;
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 40px;            /* Adjust as needed */
+  height: 40px;
+  border-radius: 50%;     /* Make the image round */
+  margin-right: 10px;     /* Some margin to separate it from the username */
+}
+
+/* Post content styles */
+.post-content h2 {
+  font-size: 19px;
+  margin-bottom: 0.5rem;
+}
+
+.post-content img {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.caption {
+  text-align: left;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  font-size: 19px;
+}
+
+.post-statistics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0; /* Add some padding at the top and bottom */
+  margin-top: 20px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center; /* Align the icon and the count vertically */
+  margin-right: 10px; /* Add some margin to the right of each item */
+}
+
+.stat-count {
+  margin-left: 5px; /* Add some space between the icon and the count */
+  font-size: 14px; /* Adjust the font size of the count */
+}
+
+/* Audio Player Styles */
+audio {
+  width: 100%; /* Make it stretch to fit the post width */
+  background-color: var(--secondary-bg-color); /* Use secondary background color for aesthetics */
+  border-radius: 8px; /* Rounded corners to match other components */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* A subtle shadow for depth */
+  margin-top: 1rem; /* Space from the text or any other content above */
+}
+
+
+/* Styles for larger screens (e.g., tablets and desktops) */
+@media (min-width: 600px) {
+  .feed-container {
+    padding: 1rem;
+    max-width: 800px;
+    margin: 0 auto; /* Center the feed on larger screens */
+  }
+
+  .post-header {
+    flex-direction: row;  /* Place avatar and username side by side on larger screens */
+    align-items: center;
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+    margin-right: 1rem;  /* Space to the right of avatar on larger screens */
+    margin-bottom: 0;    /* Reset the bottom margin on larger screens */
+  }
+
+  .post-content h2 {
+    font-size: 19px;
+  }
+}
+
+/* Links within post content */
+.post-content a {
+  color: blue; /* Or any other desired color */
+  text-decoration: underline;
+}
+
+/* Video and iframe styles */
+.post-content video,
+.post-content iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%; /* Ensure the video doesn't exceed the container width */
+  max-height: 100vh; /* Maintain aspect ratio */
+  margin: 0 auto; /* Center it horizontally */
+}
+
+/* Aspect ratio wrapper for videos and iframes */
+.aspect-ratio-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 ratio */
+  overflow: hidden;
+}
+
+.aspect-ratio-wrapper video,
+.aspect-ratio-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hashtag styles */
+.hash {
+  color: var(--link-color);
+  text-decoration: none;
+  background-color: var(--primary-bg-color);
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+.post-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px; /* Gap between each hashtag */
+  margin-bottom: 10px; /* Space from the rest of the content */
+  background-color: var(--secondary-bg-color);
+  padding: 5px;
+  border-radius: 8px;
+}
+
+/* BottomNavbar.css (if applicable) */
+.bottom-navbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: var(--primary-bg-color); /* Background color for the navbar */
+  box-shadow: 0px -2px 6px rgba(0, 0, 0, 0.1); /* Optional shadow for the navbar */
+}
+
+.bottom-nav-link {
+  text-decoration: none;
+  color: var(--link-color); /* Link color */
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-message {
+  color: red;
+  margin: 10px 0;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #181a1b;
+  color: #c7c6c6;
+  border-radius: 5px;
+}
+
+input[type="email"],
+input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #181a1b;
+  color: #c7c6c6;
+  border-radius: 5px;
+}
+
+/* Container for the login form to center elements */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+/* Login card styles */
+.login-card {
+  background-color: var(--secondary-bg-color);
+  padding: 20px 40px;
+  border-radius: 44px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  top: 67px;
+  width: 100vw;
+  height: 90vh;
+  position: relative;
+  margin: auto;
+}
+
+/* Further adjustments for even larger screens can be added here */
