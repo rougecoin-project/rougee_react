@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/rougee_react/static/css/main.218f36df.css",
+    "main.js": "/rougee_react/static/js/main.25a1e723.js",
+    "static/js/787.f0a54be5.chunk.js": "/rougee_react/static/js/787.f0a54be5.chunk.js",
+    "static/media/logo.png": "/rougee_react/static/media/logo.7bcd631904ffef45fe1e.png",
+    "index.html": "/rougee_react/index.html",
+    "main.218f36df.css.map": "/rougee_react/static/css/main.218f36df.css.map",
+    "main.25a1e723.js.map": "/rougee_react/static/js/main.25a1e723.js.map",
+    "787.f0a54be5.chunk.js.map": "/rougee_react/static/js/787.f0a54be5.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.218f36df.css",
+    "static/js/main.25a1e723.js"
+  ]
+}
