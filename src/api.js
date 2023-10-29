@@ -14,7 +14,7 @@ const endpoints = {
 
 // ... other imports and functions ...
 
-const SERVER_KEY = "55f12885e31123142b34db242d072af8";  // Define the server key as a constant
+const SERVER_KEY = process.env.REACT_APP_SERVER_KEY;  // Define the server key as a constant
 
 async function makeApiRequest(endpoint, requestData, onTokenInvalid) {
     try {
